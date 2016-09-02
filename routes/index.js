@@ -134,20 +134,45 @@ router.post('/login', function(req, res, next){
     if(user){
       return res.json({token: user.generateJWT()});
     } else {
-      console.log(info)
+      console.log(info) 
       return res.status(401).json(info);
     }
   })(req, res, next);
 });
 
 
-router.get('/users', auth,function(req, res, next){
+router.get('/users',function(req, res, next){
   console.log(req.payload)
   User.find(function(err, users){
     if(err){ return next(err); }
-
     res.json(users);
   });
+});
+ 
+/* Facebook Routes */
+router.get('/auth/facebook', 
+  passport.authenticate('facebook', { scope : ['email'], return_scopes: true }));
+
+
+// handle the callback after facebook has authenticated the user
+router.get('/auth/facebook/callback', function(req, res, next){
+    passport.authenticate('facebook', {
+        session: false,
+        failureRedirect : '/'
+    },function(err, user,info){
+      res.json({token: user.generateJWT()});
+    })(req, res, next);
+  }
+);
+
+// route for logging out
+router.get('/logout', function(req, res) {
+    req.logout();
+    res.redirect('/');
+});
+
+router.post('/loginGeneral', function(req, res, next){
+  res.redirect("auth/facebook")
 });
 
 
